@@ -18,8 +18,8 @@ let () =
             ("a <= a", true, [ 'a' ], Regex.symbol 'a');
             ("b </= a", false, [ 'b' ], Regex.symbol 'a');
             ("| <= ab*", false, [], a_b_star);
-            ("a <= ab*", true, [], a_b_star);
-            ("abbb <= ab*", true, [], a_b_star);
-            ("aabbb </= ab*", false, [], a_b_star);
+            ("a <= ab*", true, [ 'a' ], a_b_star);
+            ("abbb <= ab*", true, [ 'a'; 'b'; 'b'; 'b' ], a_b_star);
+            ("aabbb </= ab*", false, [ 'a'; 'a'; 'b'; 'b' ], a_b_star);
           ] );
     ]
