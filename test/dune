@@ -1,2 +1,3 @@
 (test
- (name vase))
+ (name test_regex)
+ (libraries vase alcotest))

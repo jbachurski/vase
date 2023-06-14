@@ -17,6 +17,7 @@
 
 (package
  (name vase)
- (depends ocaml dune))
+ (synopsis "Experimenting with a compiler")
+ (depends ocaml dune alcotest))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
