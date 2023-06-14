@@ -86,23 +86,25 @@ let rec nullable = function
   | Nothing -> false
   | Null -> true
   | Symbol _ -> false
-  | Star r -> nullable r
+  | Star _ -> true
   | Complement r -> not (nullable r)
   | Concat (r, s) -> nullable r && nullable s
   | Union (r, s) -> nullable r || nullable s
   | Intersect (r, s) -> nullable r && nullable s
 
-let rec derivative a =
-  let go = derivative a in
-  function
+let rec derivative a = function
   | Nothing -> Nothing
   | Null -> Nothing
-  | Symbol b -> if a == b then Null else Nothing
-  | Star r -> concat (go r) (star r)
-  | Complement r -> concat (go r) r
-  | Concat (r, s) -> union (concat (go r) s) (concat (regex_of_bool (nullable r)) (go s))
-  | Union (r, s) -> union (go r) (go s)
-  | Intersect (r, s) -> intersect (go r) (go s)
+  | Symbol a' when a = a' -> Null
+  | Symbol _ -> Nothing
+  | Star r -> concat (derivative a r) (star r)
+  | Complement r -> complement (derivative a r)
+  | Concat (r, s) ->
+      union
+        (concat (derivative a r) s)
+        (concat (regex_of_bool (nullable r)) (derivative a s))
+  | Union (r, s) -> union (derivative a r) (derivative a s)
+  | Intersect (r, s) -> intersect (derivative a r) (derivative a s)
 
 let flip f x y = f y x
 let derivatives xs r = List.fold_left (flip derivative) r xs
