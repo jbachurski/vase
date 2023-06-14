@@ -107,4 +107,3 @@ let rec derivative a =
 let flip f x y = f y x
 let derivatives xs r = List.fold_left (flip derivative) r xs
 let matches xs r = nullable (derivatives xs r)
-let matcher r xs = matches xs r

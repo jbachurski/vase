@@ -12,4 +12,3 @@ val intersect : 'a regex -> 'a regex -> 'a regex
 
 (* regex operations *)
 val matches : 'a list -> 'a regex -> bool
-val matcher : 'a regex -> 'a list -> bool
