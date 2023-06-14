@@ -1,0 +1,4 @@
+(executable
+ (public_name vase)
+ (name main)
+ (libraries vase))

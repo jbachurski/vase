@@ -1,0 +1,7 @@
+{
+    "ocaml.sandbox": {
+        "kind": "opam",
+        "switch": "default"
+    },
+    "editor.formatOnSave": true
+}
