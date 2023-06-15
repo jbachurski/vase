@@ -1,5 +1,9 @@
 let list_of_string s = s |> String.to_seq |> List.of_seq
 let%test "list_of_string" = list_of_string "abc" = [ 'a'; 'b'; 'c' ]
+let string_of_list xs = xs |> List.to_seq |> String.of_seq
+let%test "string_of_list" = string_of_list [ 'a'; 'b'; 'c' ] = "abc"
+let range x y = List.init (y - x + 1) (fun i -> x + i)
+let ascii_range x y = range (int_of_char x) (int_of_char y + 1) |> List.map char_of_int
 
 let rec span f = function
   | [] -> ([], [])
@@ -30,3 +34,11 @@ let%test "prefix_compare" = prefix_compare [ 1; 2 ] [ 1; 2; 3 ] = Some (-1)
 let%test "prefix_compare" = prefix_compare [ 1; 2; 3 ] [ 1; 2 ] = Some 1
 let%test "prefix_compare" = prefix_compare [ 1; 2 ] [ 1; 2 ] = Some 0
 let%test "prefix_compare" = prefix_compare [ 1; 2 ] [ 1; 3 ] = None
+
+let print_ints xs =
+  List.map
+    (fun x ->
+      print_int x;
+      print_string "; ")
+    xs
+  |> ignore

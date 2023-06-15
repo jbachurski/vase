@@ -3,15 +3,23 @@ open Vase.Lexer
 let string_of_list s = s |> List.to_seq |> String.of_seq
 
 let token_pp pf = function
-  | Newline -> Format.fprintf pf "Newline"
-  | Indent -> Format.fprintf pf "Indent"
-  | Dedent -> Format.fprintf pf "Dedent"
-  | Sep -> Format.fprintf pf "Sep"
-  | Equals -> Format.fprintf pf "Equals"
-  | Operator s -> Format.fprintf pf "Operator %s" (string_of_list s)
-  | Name s -> Format.fprintf pf "Name %s" (string_of_list s)
-  | IntLiteral s -> Format.fprintf pf "IntLiteral %s" (string_of_list s)
-  | FloatLiteral s -> Format.fprintf pf "FloatLiteral %s" (string_of_list s)
+  | Newline -> Format.fprintf pf "\\n"
+  | Indent -> Format.fprintf pf "->"
+  | Dedent -> Format.fprintf pf "<-"
+  | Sep -> Format.fprintf pf ";"
+  | ParenL -> Format.fprintf pf "("
+  | ParenR -> Format.fprintf pf ")"
+  | BracketL -> Format.fprintf pf "["
+  | BracketR -> Format.fprintf pf "]"
+  | BraceL -> Format.fprintf pf "{"
+  | BraceR -> Format.fprintf pf "}"
+  | Equals -> Format.fprintf pf "="
+  | If -> Format.fprintf pf "if"
+  | Then -> Format.fprintf pf "then"
+  | Else -> Format.fprintf pf "else"
+  | Operator s -> Format.fprintf pf "Operator '%s'" s
+  | Name s -> Format.fprintf pf "Name '%s'" s
+  | Int s -> Format.fprintf pf "Int '%s'" s
 
 let test_cases =
   let open Alcotest in
@@ -22,7 +30,26 @@ let test_cases =
             check
               (list (of_pp token_pp))
               ""
-              [ Newline; Indent; Newline; Dedent; Newline; Indent; Newline ]
-              (lex "if 1\n  halt\nelse\n  halt"));
+              [
+                If;
+                Int "42";
+                Then;
+                Newline;
+                Indent;
+                Name "halt";
+                ParenL;
+                ParenR;
+                Newline;
+                Dedent;
+                Else;
+                Newline;
+                Indent;
+                Int "2";
+                Operator "++";
+                Int "2";
+                Newline;
+                Dedent;
+              ]
+              (lex "if 42 then\n  halt ()\nelse\n  2++ 2"));
       ] );
   ]

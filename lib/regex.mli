@@ -11,4 +11,7 @@ val union : 'a regex -> 'a regex -> 'a regex
 val intersect : 'a regex -> 'a regex -> 'a regex
 
 (* regex operations *)
+val derivative : 'a -> 'a regex -> 'a regex
+val derivatives : 'a list -> 'a regex -> 'a regex
+val nullable : 'a regex -> bool
 val matches : 'a list -> 'a regex -> bool

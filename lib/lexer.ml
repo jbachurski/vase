@@ -4,26 +4,83 @@ type token =
   | Dedent
   | Sep
   | Equals
-  | Operator of char list
-  | Name of char list
-  | IntLiteral of char list
-  | FloatLiteral of char list
+  | ParenL
+  | ParenR
+  | BracketL
+  | BracketR
+  | BraceL
+  | BraceR
+  | If
+  | Then
+  | Else
+  | Operator of string
+  | Name of string
+  | Int of string
 
-let letters = ()
+let whitespace = [ ' '; '\t'; '\n' ]
+let lowercase_letters = Lists.ascii_range 'a' 'z'
+let uppercase_letters = Lists.ascii_range 'A' 'Z'
+let letters = lowercase_letters @ uppercase_letters
+let nonzero_digits = Lists.ascii_range '1' '9'
+let digits = '0' :: nonzero_digits
+let op_chars = [ '+'; '-'; '*'; '/'; '!'; '@'; '$'; '%'; '^' ]
+let id_chars = letters @ digits @ [ '_' ]
+let re_plus r = Regex.concat r (Regex.star r)
 
-let grammar =
-  let open Regex in
+let token_grammar =
+  let open Re in
   [
-    (symbols [ '\n'; ';' ], fun _ -> Sep);
-    (symbols [ '=' ], fun _ -> Equals);
-    (star (symbols [ '+'; '-'; '*'; '/'; '$' ]), fun s -> Operator s);
-    (symbols [], fun s -> Name s);
-    (symbols [], fun s -> IntLiteral s);
-    (symbols [], fun s -> FloatLiteral s);
+    (~|^|';', fun _ -> Sep);
+    (~|^|'=', fun _ -> Equals);
+    (~|^|'(', fun _ -> ParenL);
+    (~|^|')', fun _ -> ParenR);
+    (~|^|'[', fun _ -> BracketL);
+    (~|^|']', fun _ -> BracketR);
+    (~|^|'{', fun _ -> BraceL);
+    (~|^|'}', fun _ -> BraceR);
+    (~|>|"if", fun _ -> If);
+    (~|>|"then", fun _ -> Then);
+    (~|>|"else", fun _ -> Else);
+    (* [OP][OP]* *)
+    (~|^^|op_chars |>>| ~|^^|op_chars, fun s -> Operator s);
+    (* [a-zA-Z][a-zA-Z0-9_]*'* *)
+    (~|^^|letters |>>| ~|*|(~|^^|id_chars) |>>| ~|*|(~|^^|[ '\'' ]), fun s -> Name s);
+    (* 0|[1-9][0-9]* *)
+    (~|^|'0' |+| (~|^^|nonzero_digits |>>| ~|*|(~|^^|digits)), fun s -> Int s);
   ]
 
 (* Performs lexing on a single line *)
-let lex_line _ = []
+let rec lex_line l i0 =
+  let init_lexes =
+    let open Re in
+    (* match [ ]*(TOKEN)[ ]*, where [ ] is whitespace *)
+    List.map
+      (fun (r, f) ->
+        let ws = ~|^^|whitespace in
+        (~|*|ws |>>| (r |>>| ~|*|ws), f))
+      token_grammar
+  in
+  let advance a lexes = List.map (fun (r, f) -> (Regex.derivative a r, f)) lexes in
+  let all_fail lexes = List.for_all (fun (r, _) -> r = Regex.nothing) lexes in
+  let get_done lexes = List.find_opt (fun (r, _) -> Regex.nullable r) lexes in
+  let rec go xs lexes i acc =
+    print_endline ("'" ^ (acc |> List.rev |> Lists.string_of_list) ^ "'");
+    let fail () =
+      let i' = i - List.length acc in
+      raise (Failure (Printf.sprintf "Bad token at line %d, col %d" l i'))
+    in
+    match xs with
+    | [] -> fail ()
+    | x :: xs ->
+        if all_fail (advance x lexes) then
+          match get_done lexes with
+          | Some (_, f) ->
+              f (acc |> List.rev |> Lists.string_of_list |> String.trim)
+              :: lex_line l i (x :: xs)
+          | None -> fail ()
+        else go xs (advance x lexes) (i + 1) (x :: acc)
+  in
+  function [] -> [] | [ '\x00' ] -> [] | x :: xs -> go (x :: xs) init_lexes i0 []
 
 let split_on_indentation s =
   s |> Lists.list_of_string |> Lists.span (fun x -> x = ' ' || x = '\t')
@@ -35,14 +92,6 @@ let indent_diff_tokens d =
   if d < 0 then [ Newline; Indent ]
   else if d > 0 then [ Newline; Dedent ]
   else [ Newline ]
-
-let print_ints xs =
-  List.map
-    (fun x ->
-      print_int x;
-      print_string "; ")
-    xs
-  |> ignore
 
 let sgn x = if x > 0 then 1 else if x < 0 then -1 else 0
 let rec sum = function [] -> 0 | x :: xs -> x + sum xs
@@ -60,8 +109,10 @@ let lex source =
     let indent_diffs =
       List.map (fun (xs, ys) -> Option.get (Lists.prefix_compare xs ys)) indent_pairs
     in
-    let footer = List.init (-sum (List.map sgn indent_diffs)) (fun _ -> 0) in
-    print_ints indent_diffs;
-    List.combine (List.map lex_line (List.map snd lines)) (indent_diffs @ footer)
+    let footer = List.init (-sum (List.map sgn indent_diffs)) (fun _ -> Dedent) in
+    (List.combine
+       (List.mapi (fun l s -> lex_line l 0 (s @ [ '\n'; '\x00' ])) (List.map snd lines))
+       (indent_diffs @ [ 0 ])
     |> List.map (fun (xs, d) -> xs @ indent_diff_tokens d)
-    |> List.concat
+    |> List.concat)
+    @ footer
