@@ -1,2 +1,4 @@
 (library
- (name vase))
+ (name vase)
+ (instrumentation
+  (backend bisect_ppx)))

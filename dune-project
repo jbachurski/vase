@@ -18,6 +18,6 @@
 (package
  (name vase)
  (synopsis "Experimenting with a compiler")
- (depends ocaml dune alcotest))
+ (depends ocaml dune alcotest bisect_ppx))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
