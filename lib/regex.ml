@@ -1,11 +1,9 @@
-(*
-   invariant - binary operators form lists sorted in lexicographic order
-   e.g. concatentation of non-Concat x <= y <= z
-   must be exactly Concat (x, Concat (y, z))
-   under some total order on regexes <= 
-   note: the order used is as provided by the ad-hoc `compare`
-*)
+(* Based on "Regular expressions re-examined" *)
 
+(*
+    Invariant: always in similarity-canonical form
+    => structural equality is similarity as in the paper
+*)
 type 'a regex =
   | Nothing (* empty set*)
   | Null (* empty string *)
@@ -18,6 +16,7 @@ type 'a regex =
 
 let regex_of_bool = function false -> Nothing | true -> Null
 
+(* Utilities for regex binary operators *)
 type regex_bin = ConcatTag | UnionTag | IntersectTag
 
 let regex_bin_case = function
@@ -26,11 +25,13 @@ let regex_bin_case = function
   | Intersect (r, s) -> Some (IntersectTag, (r, s))
   | _ -> None
 
+(* Convert subtree spanned by operator t into a list *)
 let rec regex_bin_unchain t r' =
   match regex_bin_case r' with
   | Some (t', (r, rs)) when t = t' -> r :: regex_bin_unchain t rs
   | _ -> [ r' ]
 
+(* Convert list back into a canonical application of t *)
 let regex_bin_chain t =
   let f x y =
     match t with
@@ -39,24 +40,28 @@ let regex_bin_chain t =
     | IntersectTag -> Intersect (x, y)
   in
   let rec go = function r, s :: rs -> f r (go (s, rs)) | r, [] -> r in
+  (* create a list like Concat (x, Concat (y, Concat (z, ...))) *)
   function
   | r :: rs -> go (r, rs)
+  (* we shouldn't hit this case, as the un-chains are always non-empty *)
   | [] -> (
       match t with
       | ConcatTag -> Null
       | UnionTag -> Nothing
       | IntersectTag -> Complement Nothing)
 
+let regex_bin_make t r s =
+  let rs = regex_bin_unchain t r in
+  let ss = regex_bin_unchain t s in
+  regex_bin_chain t (List.merge compare rs ss)
+
+(* Exported smart regex constructors which assume and retain canonical form *)
+
 let nothing = Nothing
 let null = Null
 let symbol a = Symbol a
 let star = function Star r -> Star r | Null -> Null | Nothing -> Nothing | r -> Star r
 let complement = function Complement r -> r | r -> Complement r
-
-let regex_bin_make t r s =
-  let rs = regex_bin_unchain t r in
-  let ss = regex_bin_unchain t s in
-  regex_bin_chain t (List.merge compare rs ss)
 
 let concat r' s' =
   match (r', s') with
@@ -81,6 +86,8 @@ let intersect r' s' =
   | r, Complement Nothing -> r
   | Complement Nothing, r -> r
   | _ -> regex_bin_make IntersectTag r' s'
+
+(* Brzozowski derivatives *)
 
 let rec nullable = function
   | Nothing -> false
