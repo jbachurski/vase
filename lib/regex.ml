@@ -50,10 +50,15 @@ let regex_bin_chain t =
       | UnionTag -> Nothing
       | IntersectTag -> Complement Nothing)
 
-let regex_bin_make t r s =
+let regex_bin_make_assoc t r s =
   let rs = regex_bin_unchain t r in
   let ss = regex_bin_unchain t s in
   regex_bin_chain t (List.merge compare rs ss)
+
+let regex_bin_make_non_assoc t r s =
+  let rs = regex_bin_unchain t r in
+  let ss = regex_bin_unchain t s in
+  regex_bin_chain t (rs @ ss)
 
 (* Exported smart regex constructors which assume and retain canonical form *)
 
@@ -69,7 +74,7 @@ let concat r' s' =
   | _, Nothing -> Nothing
   | Null, r -> r
   | r, Null -> r
-  | _ -> regex_bin_make ConcatTag r' s'
+  | _ -> regex_bin_make_non_assoc ConcatTag r' s'
 
 let union r' s' =
   match (r', s') with
@@ -77,7 +82,7 @@ let union r' s' =
   | r, Nothing -> r
   | _, Complement Nothing -> Complement Nothing
   | Complement Nothing, _ -> Complement Nothing
-  | _ -> regex_bin_make UnionTag r' s'
+  | _ -> regex_bin_make_assoc UnionTag r' s'
 
 let intersect r' s' =
   match (r', s') with
@@ -85,7 +90,7 @@ let intersect r' s' =
   | _, Nothing -> Nothing
   | r, Complement Nothing -> r
   | Complement Nothing, r -> r
-  | _ -> regex_bin_make IntersectTag r' s'
+  | _ -> regex_bin_make_assoc IntersectTag r' s'
 
 (* Brzozowski derivatives *)
 
