@@ -10,6 +10,8 @@ depends: [
   "ocaml"
   "dune" {>= "3.7"}
   "alcotest"
+  "qcheck"
+  "qcheck-alcotest"
   "bisect_ppx"
   "odoc" {with-doc}
 ]
