@@ -19,7 +19,31 @@ let token_pp pf = function
   | Else -> Format.fprintf pf "else"
   | Operator s -> Format.fprintf pf "Operator '%s'" s
   | Name s -> Format.fprintf pf "Name '%s'" s
-  | Int s -> Format.fprintf pf "Int '%s'" s
+  | Int d -> Format.fprintf pf "Int '%d'" d
+
+let case1 = "if 42 then\n  halt ()\nelse\n  2++ 2"
+
+let lex1 =
+  [
+    If;
+    Int 42;
+    Then;
+    Newline;
+    Indent;
+    Name "halt";
+    ParenL;
+    ParenR;
+    Newline;
+    Dedent;
+    Else;
+    Newline;
+    Indent;
+    Int 2;
+    Operator "++";
+    Int 2;
+    Newline;
+    Dedent;
+  ]
 
 let test_cases =
   let open Alcotest in
@@ -27,29 +51,6 @@ let test_cases =
     ( "Lexer",
       [
         test_case "lex" `Quick (fun () ->
-            check
-              (list (of_pp token_pp))
-              ""
-              [
-                If;
-                Int "42";
-                Then;
-                Newline;
-                Indent;
-                Name "halt";
-                ParenL;
-                ParenR;
-                Newline;
-                Dedent;
-                Else;
-                Newline;
-                Indent;
-                Int "2";
-                Operator "++";
-                Int "2";
-                Newline;
-                Dedent;
-              ]
-              (lex "if 42 then\n  halt ()\nelse\n  2++ 2"));
+            check (list (of_pp token_pp)) "" lex1 (lex case1));
       ] );
   ]

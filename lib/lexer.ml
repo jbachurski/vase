@@ -15,7 +15,7 @@ type token =
   | Else
   | Operator of string
   | Name of string
-  | Int of string
+  | Int of int
 
 let whitespace = [ ' '; '\t'; '\n' ]
 let lowercase_letters = Lists.ascii_range 'a' 'z'
@@ -46,7 +46,8 @@ let token_grammar =
     (* [a-zA-Z][a-zA-Z0-9_]*'* *)
     (~|^^|letters |>>| ~|*|(~|^^|id_chars) |>>| ~|*|(~|^^|[ '\'' ]), fun s -> Name s);
     (* 0|[1-9][0-9]* *)
-    (~|^|'0' |+| (~|^^|nonzero_digits |>>| ~|*|(~|^^|digits)), fun s -> Int s);
+    ( ~|^|'0' |+| (~|^^|nonzero_digits |>>| ~|*|(~|^^|digits)),
+      fun s -> Int (int_of_string s) );
   ]
 
 (* Performs lexing on a single line *)
