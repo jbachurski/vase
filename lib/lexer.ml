@@ -104,7 +104,7 @@ let rec sum = function [] -> 0 | x :: xs -> x + sum xs
 let lex source =
   let lines = String.split_on_char '\n' source |> List.map split_on_indentation in
   let indents = List.map fst lines in
-  if List.hd indents != [] then raise (Failure "xd")
+  if List.hd indents != [] then raise (Failure "Empty source")
   else
     let indent_pairs = List.combine (Lists.drop_last indents) (List.tl indents) in
     let indent_diffs =
