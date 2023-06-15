@@ -150,5 +150,3 @@ let rec derivative a = function
 let flip f x y = f y x
 let derivatives xs r = List.fold_left (flip derivative) r xs
 let matches xs r = nullable (derivatives xs r)
-
-(* Build a DFA *)

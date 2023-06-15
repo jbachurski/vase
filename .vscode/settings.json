@@ -3,5 +3,6 @@
         "kind": "opam",
         "switch": "default"
     },
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "cmake.configureOnOpen": false
 }
