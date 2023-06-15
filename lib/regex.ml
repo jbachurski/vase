@@ -4,15 +4,43 @@
     Invariant: always in similarity-canonical form
     => structural equality is similarity as in the paper
 *)
+
 type 'a regex =
   | Nothing (* empty set*)
   | Null (* empty string *)
-  | Symbol of 'a
+  | Symbols of 'a list (* character class - sorted *)
   | Star of 'a regex
   | Complement of 'a regex
   | Concat of 'a regex * 'a regex
   | Union of 'a regex * 'a regex
   | Intersect of 'a regex * 'a regex
+
+let regex_op_tag = function
+  | Nothing -> 0
+  | Null -> 1
+  | Symbols _ -> 2
+  | Star _ -> 3
+  | Complement _ -> 4
+  | Concat _ -> 5
+  | Union _ -> 6
+  | Intersect _ -> 7
+
+let lex_compare a b = if a = 0 then b else a
+
+let rec regex_compare r s =
+  match (r, s) with
+  | Nothing, Nothing -> 0
+  | Null, Null -> 0
+  | Symbols xs, Symbols xs' -> compare xs xs'
+  | Star r', Star s' -> regex_compare r' s'
+  | Complement r', Complement s' -> regex_compare r' s'
+  | Concat (r1, r2), Concat (s1, s2) ->
+      lex_compare (regex_compare r1 s1) (regex_compare r2 s2)
+  | Union (r1, r2), Union (s1, s2) ->
+      lex_compare (regex_compare r1 s1) (regex_compare r2 s2)
+  | Intersect (r1, r2), Intersect (s1, s2) ->
+      lex_compare (regex_compare r1 s1) (regex_compare r2 s2)
+  | _ -> compare (regex_op_tag r) (regex_op_tag s)
 
 let regex_of_bool = function false -> Nothing | true -> Null
 
@@ -53,7 +81,7 @@ let regex_bin_chain t =
 let regex_bin_make_assoc t r s =
   let rs = regex_bin_unchain t r in
   let ss = regex_bin_unchain t s in
-  regex_bin_chain t (List.merge compare rs ss)
+  regex_bin_chain t (List.merge regex_compare rs ss)
 
 let regex_bin_make_non_assoc t r s =
   let rs = regex_bin_unchain t r in
@@ -64,7 +92,7 @@ let regex_bin_make_non_assoc t r s =
 
 let nothing = Nothing
 let null = Null
-let symbol a = Symbol a
+let symbols xs = Symbols (List.sort compare xs)
 let star = function Star r -> Star r | Null -> Null | Nothing -> Nothing | r -> Star r
 let complement = function Complement r -> r | r -> Complement r
 
@@ -82,6 +110,7 @@ let union r' s' =
   | r, Nothing -> r
   | _, Complement Nothing -> Complement Nothing
   | Complement Nothing, _ -> Complement Nothing
+  | Symbols xs, Symbols xs' -> Symbols (List.merge compare xs xs')
   | _ -> regex_bin_make_assoc UnionTag r' s'
 
 let intersect r' s' =
@@ -97,7 +126,7 @@ let intersect r' s' =
 let rec nullable = function
   | Nothing -> false
   | Null -> true
-  | Symbol _ -> false
+  | Symbols _ -> false
   | Star _ -> true
   | Complement r -> not (nullable r)
   | Concat (r, s) -> nullable r && nullable s
@@ -107,8 +136,8 @@ let rec nullable = function
 let rec derivative a = function
   | Nothing -> Nothing
   | Null -> Nothing
-  | Symbol a' when a = a' -> Null
-  | Symbol _ -> Nothing
+  | Symbols xs when List.exists (fun a' -> a = a') xs -> Null
+  | Symbols _ -> Nothing
   | Star r -> concat (derivative a r) (star r)
   | Complement r -> complement (derivative a r)
   | Concat (r, s) ->
@@ -121,3 +150,5 @@ let rec derivative a = function
 let flip f x y = f y x
 let derivatives xs r = List.fold_left (flip derivative) r xs
 let matches xs r = nullable (derivatives xs r)
+
+(* Build a DFA *)

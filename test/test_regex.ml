@@ -13,7 +13,8 @@ let test_matches (msg, is, what, where) =
         (Regex.matches what (Regex.complement where));
       ())
 
-let ( ~^ ) = Regex.symbol
+let ( ~^ ) a = Regex.symbols [ a ]
+let ( ~^^ ) = Regex.symbols
 let ( ~* ) = Regex.star
 let ( ~! ) = Regex.complement
 let ( +>>+ ) = Regex.concat
@@ -40,8 +41,10 @@ let regex_cases =
     ("| </= a & a*", false, [], a_and_a_star);
     ("aa </= a & a*", false, [ 'a'; 'a' ], a_and_a_star);
     ("aabbb </= !(ab*)", true, [ 'a'; 'a'; 'b'; 'b' ], ~!a_b_star);
+    ("cab <= [abc]*", true, [ 'c'; 'a'; 'b' ], ~*(~^^[ 'a'; 'b'; 'c' ]));
+    ("cad </= [abc]*", false, [ 'c'; 'a'; 'd' ], ~*(~^^[ 'a'; 'b'; 'c' ]));
   ]
 
-let () =
+let main () =
   let open Alcotest in
   run "Regex" [ ("matches", List.map test_matches regex_cases) ]
