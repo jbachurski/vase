@@ -45,6 +45,4 @@ let regex_cases =
     ("cad </= [abc]*", false, [ 'c'; 'a'; 'd' ], ~*(~^^[ 'a'; 'b'; 'c' ]));
   ]
 
-let main () =
-  let open Alcotest in
-  run "Regex" [ ("matches", List.map test_matches regex_cases) ]
+let test_cases = [ ("Regex", List.map test_matches regex_cases) ]
