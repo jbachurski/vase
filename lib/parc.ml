@@ -43,12 +43,10 @@ let word p : 'a parser =
   let p' = list_of_string p in
   fun s -> (if is_prefix p' s then [ (p, drop (len p') s) ] else []) |> List.to_seq
 
-let ( <|?> ) (p : 'a parser) (q : unit -> 'a parser) : 'a parser =
- fun s -> Seq.append (p s) (q () s)
+let ( <|> ) (p : 'a parser) (q : 'a parser) : 'a parser = fun s -> Seq.append (p s) (q s)
 
-let ( <|> ) p q = p <|?> fun () -> q
-
-let rec many p = just [] <|?> fun () -> some p
+(* we don't eta-reduce here to avoid infinite recursion with some *)
+let rec many p s = (just [] <|> some p) s
 and some p = (fun x xs -> x :: xs) <$> p <*> many p
 
 let optional p = just None <|> ((fun x -> Some x) <$> p)
