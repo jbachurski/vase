@@ -43,8 +43,9 @@ let token_grammar =
     (~|>|"else", fun _ -> Else);
     (* [OP][OP]* *)
     (~|^^|op_chars |>>| ~|^^|op_chars, fun s -> Operator s);
-    (* [a-zA-Z][a-zA-Z0-9_]*'* *)
-    (~|^^|letters |>>| ~|*|(~|^^|id_chars) |>>| ~|*|(~|^^|[ '\'' ]), fun s -> Name s);
+    (* [a-zA-Z_][a-zA-Z0-9_]*'* *)
+    ( ~|^^|(letters @ [ '_' ]) |>>| ~|*|(~|^^|id_chars) |>>| ~|*|(~|^^|[ '\'' ]),
+      fun s -> Name s );
     (* 0|[1-9][0-9]* *)
     ( ~|^|'0' |+| (~|^^|nonzero_digits |>>| ~|*|(~|^^|digits)),
       fun s -> Int (int_of_string s) );
@@ -102,6 +103,7 @@ let rec sum = function [] -> 0 | x :: xs -> x + sum xs
    Adds extra-regular Indent & Dedent tokens to describe indentation levels.
 *)
 let lex source =
+  Lists.print_chars id_chars;
   let lines = String.split_on_char '\n' source |> List.map split_on_indentation in
   let indents = List.map fst lines in
   if List.hd indents != [] then raise (Failure "Empty source")

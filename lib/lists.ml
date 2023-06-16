@@ -2,7 +2,7 @@ let list_of_string s = s |> String.to_seq |> List.of_seq
 let%test "list_of_string" = list_of_string "abc" = [ 'a'; 'b'; 'c' ]
 let string_of_list xs = xs |> List.to_seq |> String.of_seq
 let%test "string_of_list" = string_of_list [ 'a'; 'b'; 'c' ] = "abc"
-let range x y = List.init (y - x + 1) (fun i -> x + i)
+let range x y = List.init (y - x) (fun i -> x + i)
 let ascii_range x y = range (int_of_char x) (int_of_char y + 1) |> List.map char_of_int
 
 let rec span f = function
@@ -39,6 +39,14 @@ let print_ints xs =
   List.map
     (fun x ->
       print_int x;
+      print_string "; ")
+    xs
+  |> ignore
+
+let print_chars xs =
+  List.map
+    (fun x ->
+      print_char x;
       print_string "; ")
     xs
   |> ignore

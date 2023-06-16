@@ -21,36 +21,39 @@ let token_pp pf = function
   | Name s -> Format.fprintf pf "Name '%s'" s
   | Int d -> Format.fprintf pf "Int '%d'" d
 
-let case1 = "if 42 then\n  halt ()\nelse\n  2++ 2"
-
-let lex1 =
+let cases =
   [
-    If;
-    Int 42;
-    Then;
-    Newline;
-    Indent;
-    Name "halt";
-    ParenL;
-    ParenR;
-    Newline;
-    Dedent;
-    Else;
-    Newline;
-    Indent;
-    Int 2;
-    Operator "++";
-    Int 2;
-    Newline;
-    Dedent;
+    ("([{}])", [ ParenL; BracketL; BraceL; BraceR; BracketR; ParenR; Newline ]);
+    ( "if 42 then\n  halt ()\nelse\n  2++ 2",
+      [
+        If;
+        Int 42;
+        Then;
+        Newline;
+        Indent;
+        Name "halt";
+        ParenL;
+        ParenR;
+        Newline;
+        Dedent;
+        Else;
+        Newline;
+        Indent;
+        Int 2;
+        Operator "++";
+        Int 2;
+        Newline;
+        Dedent;
+      ] );
   ]
 
 let test_cases =
   let open Alcotest in
   [
     ( "Lexer",
-      [
-        test_case "lex" `Quick (fun () ->
-            check (list (of_pp token_pp)) "" lex1 (lex case1));
-      ] );
+      List.map
+        (fun (what, exp) ->
+          test_case "lex" `Quick (fun () ->
+              check (list (of_pp token_pp)) "" exp (lex what)))
+        cases );
   ]
