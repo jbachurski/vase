@@ -26,17 +26,17 @@ end
 
 include Applicative (Parser_Functor_base) (Parser_Applicative_base)
 
-let determine (p : 'a parser) s =
-  match p s () with
-  | Seq.Cons ((a, s'), r) -> (
-      match r () with
-      | Seq.Cons _ -> raise (Failure "Nondeterministic parse (many parse)")
-      | Seq.Nil -> (
-          match s' with [] -> a | _ -> raise (Failure "Parse failed (incomplete)")))
-  | Seq.Nil -> raise (Failure "Parse failed (no parse)")
-
+let filter f (p : 'a parser) : 'a parser = fun s -> Seq.filter f (p s)
 let failure : 'a parser = fun _ -> Seq.empty
 let just a : 'a parser = fun s -> [ (a, s) ] |> List.to_seq
+
+let determine (p : 'a parser) s =
+  match filter (fun (_, s') -> s' = []) p s () with
+  | Seq.Cons ((a, _), r) -> (
+      match r () with
+      | Seq.Cons _ -> raise (Failure "Nondeterministic parse (many parses)")
+      | Seq.Nil -> a)
+  | Seq.Nil -> raise (Failure "Parse failed (no complete parse)")
 
 let word p : 'a parser =
   let open Lists in
