@@ -1,4 +1,7 @@
-open Vase.Parc
+open Vase.Parc.Make (struct
+  type c = char
+end)
+
 open Vase.Lists
 
 let deterministic p s =
@@ -9,6 +12,7 @@ let deterministic p s =
 
 let determine' p s = determine p (list_of_string s)
 let deterministic' p s = deterministic p (list_of_string s)
+let word' p = string_of_list <$> word (list_of_string p)
 
 let test_cases =
   let open Alcotest in
@@ -16,21 +20,21 @@ let test_cases =
     ( "Parc",
       [
         test_case "abc <= word \"abc\"" `Quick (fun () ->
-            check string "" "abc" (determine' (word "abc") "abc"));
+            check string "" "abc" (determine' (word' "abc") "abc"));
         test_case "abc <= word \"abc\"" `Quick (fun () ->
-            check bool "" true (deterministic' (word "abc") "abc"));
+            check bool "" true (deterministic' (word' "abc") "abc"));
         test_case "ab <= word \"abc\"" `Quick (fun () ->
-            check bool "" false (deterministic' (word "abc") "ab"));
+            check bool "" false (deterministic' (word' "abc") "ab"));
         test_case "abcd <= word \"abc\"" `Quick (fun () ->
-            check bool "" false (deterministic' (word "abc") "abcd"));
+            check bool "" false (deterministic' (word' "abc") "abcd"));
         test_case "| <= word \"abc\"*" `Quick (fun () ->
-            check (list string) "" [] (determine' (many (word "abc")) ""));
+            check (list string) "" [] (determine' (many (word' "abc")) ""));
         test_case "| <= word \"abc\"+" `Quick (fun () ->
-            check bool "" false (deterministic' (some (word "abc")) ""));
+            check bool "" false (deterministic' (some (word' "abc")) ""));
         test_case "abc <= word \"abc\"+" `Quick (fun () ->
-            check (list string) "" [ "abc" ] (determine' (some (word "abc")) "abc"));
+            check (list string) "" [ "abc" ] (determine' (some (word' "abc")) "abc"));
         test_case "abcabc <= word \"abc\"+" `Quick (fun () ->
             check (list string) "" [ "abc"; "abc" ]
-              (determine' (some (word "abc")) "abcabc"));
+              (determine' (some (word' "abc")) "abcabc"));
       ] );
   ]
