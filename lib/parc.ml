@@ -30,12 +30,13 @@ struct
 
   include Applicative (Parser_Functor_base) (Parser_Applicative_base)
 
+  let laz (p : unit -> 'a parser) : 'a parser = fun s -> p () s
   let filter f (p : 'a parser) : 'a parser = fun s -> Seq.filter f (p s)
   let failure : 'a parser = fun _ -> Seq.empty
-  let just a : 'a parser = fun s -> [ (a, s) ] |> List.to_seq
+  let finish p : 'a parser = filter (fun (_, s') -> s' = []) p
 
   let determine (p : 'a parser) s =
-    match filter (fun (_, s') -> s' = []) p s () with
+    match finish p s () with
     | Seq.Cons ((a, _), r) -> (
         match r () with
         | Seq.Cons _ -> raise (Failure "Nondeterministic parse (many parses)")
@@ -46,15 +47,22 @@ struct
     let open Lists in
     fun s -> (if is_prefix p s then [ (p, drop (len p) s) ] else []) |> List.to_seq
 
-  let next f : 'a parser =
-   fun s -> (match s with x :: s' when f x -> [ (x, s') ] | _ -> []) |> List.to_seq
+  let next_of f : 'a parser =
+   fun s ->
+    (match s with
+    | x :: s' -> ( match f x with Some y -> [ (y, s') ] | None -> [])
+    | _ -> [])
+    |> List.to_seq
+
+  let next f = next_of (fun x -> if f x then Some x else None)
+  let next' f = pure () <* next f
 
   let ( <|> ) (p : 'a parser) (q : 'a parser) : 'a parser =
    fun s -> Seq.append (p s) (q s)
 
   (* we don't eta-reduce here to avoid infinite recursion with some *)
-  let rec many p s = (just [] <|> some p) s
+  let rec many p = laz (fun () -> pure [] <|> some p)
   and some p = (fun x xs -> x :: xs) <$> p <*> many p
 
-  let optional p = just None <|> ((fun x -> Some x) <$> p)
+  let optional p = pure None <|> ((fun x -> Some x) <$> p)
 end

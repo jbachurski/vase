@@ -29,8 +29,10 @@ struct
   include Functor (F)
   include A
 
-  let liftA2 f x y = f <$> x <*> y
-  let ( <**> ) a f = f <*> a
+  let liftA = ( <$> )
+  let liftA2 f x y = liftA f x <*> y
+  let liftA3 f x y z = liftA2 f x y <*> z
+  let ( <**> ) a f = (fun x g -> g x) <$> a <*> f
   let ( *> ) a b = liftA2 (fun _ x -> x) a b
   let ( <* ) a b = liftA2 (fun x _ -> x) a b
 end
