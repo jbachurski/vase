@@ -23,8 +23,8 @@ type token =
 
 let token_pp pf = function
   | Newline -> Format.fprintf pf "\\n"
-  | Indent -> Format.fprintf pf "->"
-  | Dedent -> Format.fprintf pf "<-"
+  | Indent -> Format.fprintf pf ">>"
+  | Dedent -> Format.fprintf pf "<<"
   | Sep -> Format.fprintf pf ";"
   | Equals -> Format.fprintf pf "="
   | ParenL -> Format.fprintf pf "("
@@ -50,7 +50,7 @@ let uppercase_letters = Lists.ascii_range 'A' 'Z'
 let letters = lowercase_letters @ uppercase_letters
 let nonzero_digits = Lists.ascii_range '1' '9'
 let digits = '0' :: nonzero_digits
-let op_chars = [ '+'; '-'; '*'; '/'; '!'; '@'; '$'; '%'; '^' ]
+let op_chars = [ '+'; '-'; '*'; '/'; '!'; '@'; '$'; '%'; '^'; '=' ]
 let id_chars = letters @ digits @ [ '_' ]
 let re_plus r = Regex.concat r (Regex.star r)
 

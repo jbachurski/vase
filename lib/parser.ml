@@ -17,6 +17,8 @@ type program = stmt_node list
 module Grammar = struct
   (* individual tokens *)
   let newline = next' (function Lexer.Newline -> true | _ -> false)
+  let indent = next' (function Lexer.Indent -> true | _ -> false)
+  let dedent = next' (function Lexer.Dedent -> true | _ -> false)
   let equals = next' (function Lexer.Equals -> true | _ -> false)
   let parenL = next' (function Lexer.ParenL -> true | _ -> false)
   let parenR = next' (function Lexer.ParenR -> true | _ -> false)
@@ -40,7 +42,9 @@ module Grammar = struct
         (* Int *)
         <|> ((fun x -> Int x) <$> intl)
         (* ( Expr ) *)
-        <|> (parenL *> aexpr' () <* parenR))
+        <|> (parenL *> aexpr' () <* parenR)
+        (* (indent) Expr (dedent) *)
+        <|> (indent *> aexpr' () <* dedent))
 
   (* left-recursive cases for expressions *)
   and expr_tail' () =
