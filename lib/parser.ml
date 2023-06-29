@@ -66,13 +66,13 @@ module Grammar = struct
         (* if Expr then Expr else Expr  *)
         <|> ((fun c e e' -> Branch (c, e, e'))
             <$> lit_if *> expr' ()
-            <*> lit_then *> expr' ()
-            <*> lit_else *> aexpr' ())
+            <*> optional newline *> lit_then *> expr' ()
+            <*> optional newline *> lit_else *> aexpr' ())
         (* let Name = Expr in Expr  *)
         <|> ((fun x e e' -> Binding (x, e, e'))
             <$> lit_let *> name
             <*> equals *> expr' ()
-            <*> lit_in *> aexpr' ()))
+            <*> optional newline *> lit_in *> aexpr' ()))
 
   let expr = expr' ()
   let expr_head = expr_head' ()

@@ -25,6 +25,7 @@ let cases =
         Int 2;
         Newline;
         Dedent;
+        Newline;
       ] );
   ]
 

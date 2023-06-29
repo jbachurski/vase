@@ -148,4 +148,4 @@ let lex source =
        (indent_diffs @ [ 0 ])
     |> List.map (fun (xs, d) -> xs @ indent_diff_tokens d)
     |> List.concat)
-    @ footer
+    @ if footer = [] then [] else footer @ [ Newline ]

@@ -79,5 +79,9 @@ let test_cases =
             check bool "" true
               ([ Assign ("r", Branch (Infix ("==", Int 0, Int 1), Int 1, Int 0)) ]
               = parse (Vase.Lexer.lex "r = if 0 == 1 then 1 else 0")));
+        test_case "program" `Quick (fun () ->
+            check bool "" true
+              ([ Assign ("r", Branch (Infix ("==", Int 0, Int 1), Int 1, Int 0)) ]
+              = parse (Vase.Lexer.lex "r =\n  if\n    0 == 1\n  then 1\n  else 0")));
       ] );
   ]
