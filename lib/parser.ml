@@ -17,8 +17,8 @@ type program = stmt_node list
 module Grammar = struct
   (* individual tokens *)
   let newline = next' (function Lexer.Newline -> true | _ -> false)
-  let indent = next' (function Lexer.Indent -> true | _ -> false)
-  let dedent = next' (function Lexer.Dedent -> true | _ -> false)
+  let indent = newline *> next' (function Lexer.Indent -> true | _ -> false)
+  let dedent = newline *> next' (function Lexer.Dedent -> true | _ -> false)
   let equals = next' (function Lexer.Equals -> true | _ -> false)
   let parenL = next' (function Lexer.ParenL -> true | _ -> false)
   let parenR = next' (function Lexer.ParenR -> true | _ -> false)
