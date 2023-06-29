@@ -65,5 +65,19 @@ let test_cases =
                          Infix ("+", Int 2, Int 3) ) );
                ]
               = parse (Vase.Lexer.lex "r = (\\x -> x + 1) (2 + 3)")));
+        test_case "program" `Quick (fun () ->
+            check bool "" true
+              ([
+                 Assign
+                   ( "r",
+                     Binding
+                       ("x", Int 2, Binding ("y", Int 2, Infix ("+", Name "x", Name "y")))
+                   );
+               ]
+              = parse (Vase.Lexer.lex "r = (let x = 2 in let y = 2 in x + y)")));
+        test_case "program" `Quick (fun () ->
+            check bool "" true
+              ([ Assign ("r", Branch (Infix ("==", Int 0, Int 1), Int 1, Int 0)) ]
+              = parse (Vase.Lexer.lex "r = if 0 == 1 then 1 else 0")));
       ] );
   ]
