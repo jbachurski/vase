@@ -8,6 +8,8 @@ type expr_node =
   | Infix of string * expr_node * expr_node
   | Lambda of string * expr_node
   | Apply of expr_node * expr_node
+  | Branch of expr_node * expr_node * expr_node
+  | Binding of string * expr_node * expr_node
 
 type stmt_node = Assign of string * expr_node | Pass
 type program = stmt_node list
@@ -20,6 +22,11 @@ module Grammar = struct
   let parenR = next' (function Lexer.ParenR -> true | _ -> false)
   let backslash = next' (function Lexer.Backslash -> true | _ -> false)
   let arrow = next' (function Lexer.Arrow -> true | _ -> false)
+  let lit_if = next' (function Lexer.If -> true | _ -> false)
+  let lit_then = next' (function Lexer.Then -> true | _ -> false)
+  let lit_else = next' (function Lexer.Else -> true | _ -> false)
+  let lit_let = next' (function Lexer.Let -> true | _ -> false)
+  let lit_in = next' (function Lexer.In -> true | _ -> false)
   let operator = next_of (function Lexer.Operator x -> Some x | _ -> None)
   let name = next_of (function Lexer.Name x -> Some x | _ -> None)
   let intl = next_of (function Lexer.Int x -> Some x | _ -> None)
@@ -51,7 +58,17 @@ module Grammar = struct
     laz (fun () ->
         expr' ()
         (* \ Name -> Expr  *)
-        <|> ((fun x e -> Lambda (x, e)) <$> (backslash *> name <* arrow) <*> aexpr' ()))
+        <|> ((fun x e -> Lambda (x, e)) <$> (backslash *> name <* arrow) <*> aexpr' ())
+        (* if Expr then Expr else Expr  *)
+        <|> ((fun c e e' -> Branch (c, e, e'))
+            <$> lit_if *> expr' ()
+            <*> lit_then *> expr' ()
+            <*> lit_else *> aexpr' ())
+        (* let Name = Expr in Expr  *)
+        <|> ((fun x e e' -> Binding (x, e, e'))
+            <$> lit_let *> name
+            <*> equals *> expr' ()
+            <*> lit_in *> aexpr' ()))
 
   let expr = expr' ()
   let expr_head = expr_head' ()

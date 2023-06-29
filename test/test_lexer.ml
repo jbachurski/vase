@@ -19,6 +19,8 @@ let token_pp pf = function
   | If -> Format.fprintf pf "if"
   | Then -> Format.fprintf pf "then"
   | Else -> Format.fprintf pf "else"
+  | Let -> Format.fprintf pf "let"
+  | In -> Format.fprintf pf "in"
   | Operator s -> Format.fprintf pf "Operator '%s'" s
   | Name s -> Format.fprintf pf "Name '%s'" s
   | Int d -> Format.fprintf pf "Int '%d'" d

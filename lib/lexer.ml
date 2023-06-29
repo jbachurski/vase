@@ -15,6 +15,8 @@ type token =
   | If
   | Then
   | Else
+  | Let
+  | In
   | Operator of string
   | Name of string
   | Int of int
@@ -45,6 +47,8 @@ let token_grammar =
     (~|>|"if", fun _ -> If);
     (~|>|"then", fun _ -> Then);
     (~|>|"else", fun _ -> Else);
+    (~|>|"let", fun _ -> Let);
+    (~|>|"in", fun _ -> In);
     (* [OP][OP]* *)
     (~|^^|op_chars |>>| ~|*|(~|^^|op_chars), fun s -> Operator s);
     (* [a-zA-Z_][a-zA-Z0-9_]*'* *)
