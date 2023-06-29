@@ -10,6 +10,8 @@ type token =
   | BracketR
   | BraceL
   | BraceR
+  | Backslash
+  | Arrow
   | If
   | Then
   | Else
@@ -38,6 +40,8 @@ let token_grammar =
     (~|^|']', fun _ -> BracketR);
     (~|^|'{', fun _ -> BraceL);
     (~|^|'}', fun _ -> BraceR);
+    (~|^|'\\', fun _ -> Backslash);
+    (~|>|"->", fun _ -> Arrow);
     (~|>|"if", fun _ -> If);
     (~|>|"then", fun _ -> Then);
     (~|>|"else", fun _ -> Else);
@@ -66,7 +70,7 @@ let rec lex_line l i0 =
   let all_fail lexes = List.for_all (fun (r, _) -> r = Regex.nothing) lexes in
   let get_done lexes = List.find_opt (fun (r, _) -> Regex.nullable r) lexes in
   let rec go xs lexes i acc =
-    print_endline ("'" ^ (acc |> List.rev |> Lists.string_of_list) ^ "'");
+    (* print_endline ("'" ^ (acc |> List.rev |> Lists.string_of_list) ^ "'"); *)
     let fail () =
       let i' = i - List.length acc in
       raise (Failure (Printf.sprintf "Bad token at line %d, col %d" l i'))

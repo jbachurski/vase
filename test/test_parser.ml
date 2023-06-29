@@ -55,5 +55,15 @@ let test_cases =
                    ("a", Infix ("+", Int 1, Infix ("+", Int 2, Infix ("+", Int 3, Int 4))));
                ]
               = parse (Vase.Lexer.lex "a = 1 + 2 + 3 + 4")));
+        test_case "program" `Quick (fun () ->
+            check bool "" true
+              ([
+                 Assign
+                   ( "r",
+                     Apply
+                       ( Lambda ("x", Infix ("+", Name "x", Int 1)),
+                         Infix ("+", Int 2, Int 3) ) );
+               ]
+              = parse (Vase.Lexer.lex "r = (\\x -> x + 1) (2 + 3)")));
       ] );
   ]
